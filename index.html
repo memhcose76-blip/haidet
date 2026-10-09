@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090b11">
+  <meta name="description" content="مساحة PRINOVA لقص الصور ومسح البطاقات وتجهيزها للطباعة">
+  <title>PRINOVA — مساحة عمل الصور</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Cinzel:wght@700&family=Noto+Naskh+Arabic:wght@500;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <button class="icon-btn" id="menuBtn" aria-label="فتح القائمة" title="القائمة">☰</button>
+    <div class="brand"><strong>مساحة العمل</strong><span>PRINOVA</span></div>
+    <button class="icon-btn" id="exportBtn" aria-label="تصدير PNG" title="تصدير PNG">⇩</button>
+  </header>
+
+  <nav class="toolbar" aria-label="أدوات مساحة العمل">
+    <button class="tool-chip" id="scanBtn" title="مسح بطاقة بالكاميرا">▣ <span>ماسح</span></button>
+    <button class="tool-chip" id="filtersBtn" title="فلاتر الصور">◉ <span>فلاتر</span></button>
+    <button class="tool-chip" id="sizeBtn" title="مقاس الصورة">↔ <span>قياس</span></button>
+    <button class="tool-chip" id="repeatBtn" title="تكرار الصورة على الورقة">▦ <span>نسخ للطباعة</span></button>
+    <button class="tool-chip" id="textBtn" title="إضافة نص">T <span>نص</span></button>
+    <button class="tool-chip active" id="gridBtn" title="إظهار الشبكة">▦ <span>الشبكة</span></button>
+    <button class="tool-chip active" id="snapBtn" title="محاذاة العناصر">⌖ <span>محاذاة</span></button>
+    <button class="tool-chip" id="paperBtn">▤ <span id="paperName">A4</span></button>
+    <button class="tool-chip" id="arrangeBtn">▤ <span>ترتيب</span></button>
+    <button class="tool-chip icon-only" id="undoBtn" title="تراجع" aria-label="تراجع">↶</button>
+    <button class="tool-chip icon-only" id="redoBtn" title="إعادة" aria-label="إعادة">↷</button>
+    <button class="tool-chip" id="clearBtn">⌫ <span>مسح</span></button>
+  </nav>
+
+  <main class="workspace">
+    <div class="workspace-heading"><span id="faceTitle">الوجه الأمامي</span><span class="hint">اسحب الصور لترتيبها · استخدم الزوايا لتغيير الحجم</span></div>
+    <div class="face-switch" role="tablist" aria-label="وجه التصميم">
+      <button class="face-tab active" id="frontTab" role="tab" aria-selected="true">الوجه الأمامي</button>
+      <button class="face-tab" id="backTab" role="tab" aria-selected="false">الوجه الخلفي</button>
+    </div>
+    <div class="page-wrap">
+      <div class="page" id="page" aria-label="صفحة التصميم">
+        <div class="page-grid" id="pageGrid" aria-hidden="true"></div>
+        <div class="empty-state" id="emptyState"><span class="empty-icon">＋</span><strong>ابدأ بإضافة صورك</strong><small>قصّها أو امسح البطاقة ثم جهزها للطباعة</small></div>
+      </div>
+    </div>
+  </main>
+
+  <button class="add-button" id="addBtn"><span class="plus">＋</span><span>إضافة صور</span></button>
+  <input id="fileInput" type="file" accept="image/*" multiple hidden>
+
+  <div class="selection-bar" id="selectionBar" aria-label="أدوات الصورة المحددة">
+    <button data-action="crop" title="قص الصورة">✂<small>قص</small></button>
+    <button data-action="adjust" title="تعديل الصورة">◐<small>تعديل</small></button>
+    <button data-action="edittext" title="تعديل النص" hidden>Ｔ<small>النص</small></button>
+    <button data-action="duplicate" title="نسخ الصورة">▣<small>نسخ</small></button>
+    <button data-action="rotate" title="تدوير">⟳<small>تدوير</small></button>
+    <button data-action="flip" title="عكس أفقي">⇆<small>عكس</small></button>
+    <button data-action="sendback" title="نقل للوجه الآخر">⇄<small>للخلف</small></button>
+    <button data-action="delete" class="danger" title="حذف الصورة">⌫<small>حذف</small></button>
+  </div>
+
+  <section class="modal" id="paperModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="paperHeading">
+    <div class="modal-card"><div class="grabber"></div><h2 id="paperHeading">حجم الورق</h2>
+      <div class="paper-options">
+        <button data-paper="A4,210,297">A4 <small>210 × 297 ملم</small></button>
+        <button data-paper="A3,297,420">A3 <small>297 × 420 ملم</small></button>
+        <button data-paper="A5,148,210">A5 <small>148 × 210 ملم</small></button>
+        <button data-paper="Letter,216,279">Letter <small>216 × 279 ملم</small></button>
+      </div>
+      <label class="field-label">مقاس مخصص</label>
+      <div class="field-row"><input id="paperW" type="number" min="30" max="1000" value="210" aria-label="عرض الورق"><span>×</span><input id="paperH" type="number" min="30" max="1000" value="297" aria-label="ارتفاع الورق"><select id="paperUnit" aria-label="وحدة الورق"><option value="mm">ملم</option><option value="cm">سم</option></select></div>
+      <button class="gold-btn wide" id="applyPaper">تطبيق المقاس</button>
+      <button class="text-btn close-modal">إغلاق</button>
+    </div>
+  </section>
+
+  <section class="modal" id="menuModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="menuHeading">
+    <div class="modal-card"><div class="grabber"></div><h2 id="menuHeading">القائمة والمشروع</h2>
+      <button class="menu-option" id="saveProject">⬇ <span>حفظ المشروع كملف</span></button>
+      <button class="menu-option" id="loadProject">⬆ <span>فتح مشروع محفوظ</span></button>
+      <button class="menu-option" id="exportBoth">▧ <span>تصدير الوجهين PNG</span></button>
+      <button class="menu-option" id="printBtn">▤ <span>طباعة / حفظ PDF</span></button>
+      <button class="menu-option" id="clearAll">⌫ <span>مسح كل العناصر</span></button>
+      <input id="projectInput" type="file" accept=".prinova,application/json" hidden>
+      <p class="mini-hint">لإنشاء PDF اختر «حفظ كـ PDF» من نافذة الطباعة في المتصفح.</p>
+      <button class="text-btn close-modal">إغلاق</button>
+    </div>
+  </section>
+
+  <section class="modal" id="cropModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="cropHeading">
+    <div class="modal-card crop-card"><div class="grabber"></div><h2 id="cropHeading">قص الصورة</h2>
+      <div class="crop-preview" id="cropPreview"><canvas id="cropCanvas"></canvas><div class="crop-box" id="cropBox"><i></i></div></div>
+      <div class="preset-row" id="cropPresets">
+        <button class="active" data-ratio="free">حر</button><button data-ratio="1.585">هوية</button><button data-ratio="0.709">بطاقة سكن</button><button data-ratio="0.778">جواز</button><button data-ratio="1">مربع</button>
+      </div>
+      <p class="mini-hint">اسحب إطار القص أو اسحب داخله لتحريك التحديد.</p>
+      <div class="action-row"><button class="ghost-btn close-modal">إلغاء</button><button class="gold-btn" id="applyCrop">تطبيق القص</button></div>
+    </div>
+  </section>
+
+  <section class="modal" id="adjustModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adjustHeading">
+    <div class="modal-card"><div class="grabber"></div><h2 id="adjustHeading">تعديل الصورة</h2>
+      <div class="slider-line"><label for="brightness">السطوع</label><input id="brightness" type="range" min="50" max="160" value="100"><output id="brightnessOut">100%</output></div>
+      <div class="slider-line"><label for="contrast">التباين</label><input id="contrast" type="range" min="50" max="160" value="100"><output id="contrastOut">100%</output></div>
+      <div class="slider-line"><label for="saturation">التشبع</label><input id="saturation" type="range" min="0" max="180" value="100"><output id="saturationOut">100%</output></div>
+      <div class="slider-line"><label for="sharpness">حدة التفاصيل</label><input id="sharpness" type="range" min="0" max="100" value="0"><output id="sharpnessOut">0</output></div>
+      <div class="remove-box"><label for="bgTolerance">إزالة لون الخلفية القريب — محلياً</label><input id="bgTolerance" type="range" min="12" max="115" value="42"><output id="bgToleranceOut">42</output><button class="ghost-btn wide" id="removeBgBtn">إزالة الخلفية من الحواف</button><small>إزالة تقريبية للألوان المتصلة بحواف الصورة، وليست عزل AI احترافي.</small></div>
+      <button class="ghost-btn wide sharp-btn" id="applySharpness">تطبيق الحدة على الصورة</button>
+      <div class="action-row"><button class="ghost-btn" id="resetAdjust">إرجاع الأصل</button><button class="gold-btn" id="applyAdjust">تم</button></div>
+    </div>
+  </section>
+
+  <section class="modal" id="scannerModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="scannerHeading">
+    <div class="modal-card scanner-card"><div class="grabber"></div><h2 id="scannerHeading">ماسح البطاقات الذكي</h2>
+      <div class="scanner-stage"><video id="scanVideo" autoplay playsinline muted hidden></video><img id="scanImage" alt="معاينة الصورة المراد مسحها" hidden><div id="scanPlaceholder"><span>▣</span><b>صوّر البطاقة بوضوح</b><small>خلّ البطاقة كاملة داخل الإطار وعلى سطح متباين</small></div><canvas id="scanWork" hidden></canvas></div>
+      <div class="scanner-actions"><button class="ghost-btn" id="cameraBtn">فتح الكاميرا</button><button class="ghost-btn" id="captureBtn" disabled>التقاط</button><button class="ghost-btn" id="scanFileBtn">اختيار صورة</button><input id="scanFile" type="file" accept="image/*" capture="environment" hidden></div>
+      <label class="field-label" for="scanType">نوع القياس الناتج</label>
+      <select class="full-select" id="scanType"><option value="auto">اكتشاف تلقائي</option><option value="id">البطاقة الوطنية — أفقي</option><option value="idPortrait">البطاقة الوطنية — عمودي</option><option value="residence">بطاقة السكن — 105 × 148 ملم</option><option value="residenceLandscape">بطاقة السكن — أفقي</option></select>
+      <div class="slider-line"><label for="edgeLevel">حساسية الحواف</label><input id="edgeLevel" type="range" min="20" max="120" value="65"><output id="edgeLevelOut">65</output></div>
+      <div class="scanner-note" id="scanStatus">الكشف وتصحيح المنظور داخل جهازك بدون مكتبة خارجية أو رفع للصور.</div>
+      <canvas id="scanResultCanvas" hidden></canvas>
+      <div class="action-row"><button class="ghost-btn close-modal" id="closeScanner">إغلاق</button><button class="ghost-btn" id="detectScan" disabled>كشف وتصحيح الحدود</button><button class="gold-btn" id="addScanResult" disabled>إضافة للورقة</button></div>
+    </div>
+  </section>
+
+  <section class="modal" id="filtersModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="filtersHeading">
+    <div class="modal-card"><div class="grabber"></div><h2 id="filtersHeading">فلاتر الصور الاحترافية</h2>
+      <p class="mini-hint">اختَر صورة أولاً. الفلاتر غير مدمرة، وتنعكس على المعاينة والتصدير.</p>
+      <div class="filter-grid" id="filterGrid">
+        <button data-look="" class="filter-preset active"><span class="filter-swatch natural">Aa</span><b>طبيعي</b><small>الأصل</small></button>
+        <button data-look="contrast(1.12) saturate(1.08)" class="filter-preset"><span class="filter-swatch clear">Aa</span><b>وضوح</b><small>تفاصيل أقوى</small></button>
+        <button data-look="brightness(1.03) contrast(1.04) saturate(1.12)" class="filter-preset"><span class="filter-swatch portrait">Aa</span><b>بورتريه</b><small>ألوان ناعمة</small></button>
+        <button data-look="grayscale(1) contrast(1.16)" class="filter-preset"><span class="filter-swatch mono">Aa</span><b>أبيض وأسود</b><small>وثائقي</small></button>
+        <button data-look="sepia(.18) saturate(1.2) contrast(1.05)" class="filter-preset"><span class="filter-swatch warm">Aa</span><b>دافئ</b><small>ذهبي هادئ</small></button>
+        <button data-look="hue-rotate(190deg) saturate(.92) contrast(1.06)" class="filter-preset"><span class="filter-swatch cool">Aa</span><b>بارد</b><small>نغمة فضية</small></button>
+        <button data-look="saturate(1.42) contrast(1.08)" class="filter-preset"><span class="filter-swatch vivid">Aa</span><b>حيوي</b><small>تشبع غني</small></button>
+        <button data-look="brightness(1.13) contrast(1.18) saturate(.82)" class="filter-preset"><span class="filter-swatch document">Aa</span><b>مستند</b><small>تنظيف وتفتيح</small></button>
+        <button data-look="contrast(1.2) saturate(1.16) brightness(.97)" class="filter-preset"><span class="filter-swatch cinema">Aa</span><b>سينمائي</b><small>عمق لوني</small></button>
+      </div>
+      <button class="text-btn close-modal">إغلاق</button>
+    </div>
+  </section>
+
+  <section class="modal" id="sizeModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="sizeHeading">
+    <div class="modal-card"><div class="grabber"></div><h2 id="sizeHeading">المقاس الفعلي للصورة</h2>
+      <p class="mini-hint">حدّد مقاس الطباعة الحقيقي؛ نضبط أبعاد الصورة على الورقة بالمليمتر.</p>
+      <div class="size-presets">
+        <button data-w="85.6" data-h="53.98">البطاقة الوطنية <small>85.60 × 53.98 ملم</small></button>
+        <button data-w="53.98" data-h="85.6">الوطنية — عمودي <small>53.98 × 85.60 ملم</small></button>
+        <button data-w="105" data-h="148">بطاقة السكن <small>105 × 148 ملم</small></button>
+        <button data-w="148" data-h="105">السكن — أفقي <small>148 × 105 ملم</small></button>
+        <button data-w="35" data-h="45">صورة جواز <small>35 × 45 ملم</small></button>
+      </div>
+      <label class="field-label">مقاس مخصص</label>
+      <div class="field-row"><input id="photoW" type="number" min="1" step="0.1" value="85.6" aria-label="عرض الصورة"><span>×</span><input id="photoH" type="number" min="1" step="0.1" value="53.98" aria-label="ارتفاع الصورة"><select id="photoUnit" aria-label="وحدة القياس"><option value="mm">ملم</option><option value="cm">سم</option></select></div>
+      <button class="gold-btn wide" id="applyPhotoSize">تطبيق القياس</button>
+      <button class="text-btn close-modal">إغلاق</button>
+    </div>
+  </section>
+
+  <section class="modal" id="repeatModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="repeatHeading">
+    <div class="modal-card"><div class="grabber"></div><h2 id="repeatHeading">تكرار الصورة على الورقة</h2>
+      <p class="mini-hint">اختَر صورة وحدد العدد؛ يرتبها تلقائياً داخل حدود الورقة مع الحفاظ على النسبة.</p>
+      <label class="field-label" for="repeatCount">عدد النسخ على هذه الورقة</label><input class="wide-input" id="repeatCount" type="number" min="1" max="60" value="8">
+      <div class="field-row"><label class="field-label">الهامش (ملم)</label><input id="repeatMargin" type="number" min="0" max="30" value="5"><label class="field-label">الفاصل (ملم)</label><input id="repeatGap" type="number" min="0" max="20" value="3"></div>
+      <button class="gold-btn wide" id="applyRepeat">أنشئ النسخ ورتبها</button>
+      <button class="text-btn close-modal">إغلاق</button>
+    </div>
+  </section>
+
+  <section class="modal" id="textModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="textHeading">
+    <div class="modal-card"><div class="grabber"></div><h2 id="textHeading">نص عربي واضح</h2>
+      <label class="field-label" for="artText">النص</label><textarea class="text-area" id="artText" rows="3" placeholder="اكتب النص الذي تريد إضافته"></textarea>
+      <div class="field-row"><label class="field-label">الخط</label><select id="artFont"><option value="Cairo">Cairo — واضح وحديث</option><option value="Tajawal">Tajawal — هندسي</option><option value="Noto Naskh Arabic">Noto Naskh — نسخي</option><option value="Arial">Arial — افتراضي</option></select><label class="field-label">الحجم</label><input id="artFontSize" type="number" min="14" max="160" value="48"></div>
+      <div class="field-row"><label class="field-label">اللون</label><input type="color" id="artColor" value="#111111"><label class="field-label">المحاذاة</label><select id="artAlign"><option value="center">وسط</option><option value="right">يمين</option><option value="left">يسار</option></select></div>
+      <label class="check-row"><input type="checkbox" id="artBold" checked> خط عريض واضح</label>
+      <div class="action-row"><button class="ghost-btn close-modal">إلغاء</button><button class="gold-btn" id="applyText">إضافة النص</button></div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="script.js" defer></script>
+  <script src="advanced.js" defer></script>
+</body>
+</html>
